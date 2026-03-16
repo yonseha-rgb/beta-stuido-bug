@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>그립 스튜디오 베타 피드백</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:14px; }
+
+  /* ── LNB ── */
+  .lnb { width:120px; min-width:120px; background:#1a1a2e; display:flex; flex-direction:column; justify-content:space-between; padding:16px 0; color:#fff; height:100vh; position:fixed; left:0; top:0; z-index:10; }
+  .lnb-logo { padding:0 16px; margin-bottom:28px; display:flex; align-items:center; gap:6px; }
+  .lnb-logo-icon { width:26px; height:26px; border-radius:6px; background:linear-gradient(135deg,#ff4f6d,#ff6b81); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#fff; }
+  .lnb-logo-text { font-size:13px; font-weight:700; line-height:1.1; }
+  .lnb-logo-sub { font-size:9px; color:#8888aa; font-weight:500; }
+  .lnb-menu { padding:10px 16px; display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; border-left:3px solid transparent; color:#8888aa; }
+  .lnb-menu.active { background:rgba(255,79,109,0.12); color:#ff4f6d; font-weight:600; border-left-color:#ff4f6d; }
+  .lnb-bottom { padding:0 12px; }
+  .lnb-user { display:flex; align-items:center; gap:8px; padding:8px 4px; border-top:1px solid rgba(255,255,255,0.06); }
+  .lnb-user-avatar { width:28px; height:28px; border-radius:50%; background:#2a2a4a; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .lnb-user-name { font-size:11px; font-weight:500; color:#ccc; }
+  .lnb-user-role { font-size:10px; color:#666; }
+
+  /* 베타 버튼 */
+  .beta-btn { width:100%; padding:10px 0; border-radius:8px; border:1px solid rgba(255,79,109,0.4); background:rgba(255,79,109,0.1); color:#ff6b81; font-size:12px; font-weight:600; cursor:pointer; margin-bottom:16px; display:flex; align-items:center; justify-content:center; gap:4px; transition:all 0.2s; }
+  .beta-btn:hover { background:rgba(255,79,109,0.2); }
+  .beta-badge { font-size:9px; font-weight:700; background:#ff4f6d; color:#fff; padding:1px 5px; border-radius:4px; margin-right:2px; }
+
+  /* ── 메인 ── */
+  .main { margin-left:120px; background:#f5f5f8; min-height:100vh; position:relative; }
+  .main-header { background:#fff; border-bottom:1px solid #eee; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .main-header-title { font-size:15px; font-weight:700; color:#1a1a2e; display:flex; align-items:center; gap:8px; }
+  .main-header-time { font-size:11px; color:#ff4f6d; font-weight:600; }
+  .main-header-stats { display:flex; gap:16px; }
+  .main-header-stat { font-size:11px; color:#666; background:#f8f8fa; padding:4px 10px; border-radius:6px; }
+  .main-grid { display:grid; grid-template-columns:1fr 1.2fr 0.8fr; gap:16px; padding:24px; }
+  .main-card { background:#fff; border-radius:12px; border:1px solid #eee; padding:20px; }
+  .main-card-title { font-size:13px; font-weight:600; color:#333; margin-bottom:12px; }
+  .skeleton { background:#eee; border-radius:4px; }
+  .skeleton-light { background:#f5f5f5; border-radius:4px; }
+  .video-placeholder { width:100%; height:180px; background:#1a1a2e; border-radius:8px; margin-bottom:16px; }
+  .product-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #f5f5f5; }
+  .product-thumb { width:48px; height:48px; background:#f0f0f3; border-radius:8px; flex-shrink:0; }
+  .chat-line { height:8px; background:#f0f0f3; border-radius:4px; margin-bottom:10px; }
+
+  /* ── 딤드 + 팝업 ── */
+  .overlay { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; animation:fadeIn 0.2s ease; }
+  .overlay.active { display:flex; }
+  .popup { width:520px; max-height:85vh; overflow-y:auto; background:#fff; border-radius:20px; box-shadow:0 32px 80px rgba(0,0,0,0.25); animation:popIn 0.3s cubic-bezier(.4,0,.2,1); }
+  .popup::-webkit-scrollbar { width:6px; }
+  .popup::-webkit-scrollbar-thumb { background:#ddd; border-radius:3px; }
+
+  /* 팝업 헤더 */
+  .popup-header { padding:28px 32px 20px; border-bottom:1px solid #f0f0f3; }
+  .popup-header-top { display:flex; align-items:center; justify-content:space-between; }
+  .popup-header-left { display:flex; align-items:center; gap:8px; }
+  .popup-logo { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#ff4f6d,#ff6b81); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#fff; }
+  .popup-title { font-size:17px; font-weight:700; color:#1a1a2e; }
+  .popup-close { width:32px; height:32px; border-radius:8px; border:none; background:#f5f5f8; cursor:pointer; font-size:16px; color:#999; display:flex; align-items:center; justify-content:center; }
+  .popup-close:hover { background:#eee; }
+  .popup-desc { font-size:13px; color:#666; line-height:1.7; margin:14px 0 0; }
+
+  /* 그립스튜디오란 */
+  .info-toggle { margin-top:10px; padding:8px 12px; border-radius:8px; border:none; background:#f8f8fa; cursor:pointer; font-size:12px; color:#888; display:flex; align-items:center; gap:6px; width:100%; text-align:left; }
+  .info-toggle:hover { background:#f0f0f3; }
+  .info-arrow { display:inline-block; transition:transform 0.2s; }
+  .info-arrow.open { transform:rotate(90deg); }
+  .info-box { margin:8px 0 0; padding:14px 16px; background:#fafafa; border-radius:10px; font-size:12px; color:#777; line-height:1.8; border-left:3px solid #ff4f6d; display:none; }
+  .info-box.open { display:block; }
+  .info-box strong { color:#555; }
+  .info-coming { color:#ff4f6d; font-weight:600; }
+
+  /* 폼 공통 */
+  .form-section { padding:24px 32px 28px; }
+  .form-label { font-size:13px; font-weight:600; color:#333; margin-bottom:12px; }
+  .form-label-required { color:#ff4f6d; font-weight:500; }
+  .form-label-optional { font-weight:400; color:#aaa; }
+
+  /* 카테고리 그리드 */
+  .cat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px; }
+  .cat-btn { padding:14px; border-radius:12px; border:1.5px solid #eee; background:#fff; cursor:pointer; text-align:left; transition:all 0.15s; }
+  .cat-btn:hover { border-color:#ffcdd5; }
+  .cat-btn.selected { border:2px solid #ff4f6d; background:#fff5f6; }
+  .cat-emoji { font-size:18px; margin-bottom:4px; }
+  .cat-label { font-size:13px; font-weight:600; color:#333; }
+  .cat-btn.selected .cat-label { color:#ff4f6d; }
+  .cat-desc { font-size:11px; color:#999; margin-top:2px; }
+
+  /* 영역 칩 */
+  .area-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:28px; }
+  .area-chip { padding:6px 14px; border-radius:20px; font-size:12px; border:1.5px solid #e5e5ea; background:#fff; color:#555; cursor:pointer; transition:all 0.15s; }
+  .area-chip:hover { border-color:#ffcdd5; }
+  .area-chip.selected { border-color:#ff4f6d; background:#fff5f6; color:#ff4f6d; font-weight:600; }
+
+  /* 버튼 */
+  .btn-primary { width:100%; padding:13px 0; border-radius:12px; border:none; background:linear-gradient(135deg,#ff4f6d,#ff6b81); color:#fff; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .btn-primary:disabled { background:#e5e5ea; color:#aaa; cursor:not-allowed; }
+  .btn-primary:not(:disabled):hover { filter:brightness(1.05); }
+  .btn-back { background:none; border:none; color:#999; font-size:12px; cursor:pointer; margin-bottom:16px; padding:0; }
+  .btn-back:hover { color:#666; }
+  .btn-close-final { padding:11px 32px; border-radius:10px; border:none; background:#f5f5f8; color:#555; font-size:13px; font-weight:600; cursor:pointer; }
+  .btn-close-final:hover { background:#eee; }
+
+  /* 태그 */
+  .tag { padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; display:inline-flex; align-items:center; gap:4px; }
+  .tag-primary { background:#fff5f6; color:#ff4f6d; border:1px solid rgba(255,79,109,0.2); }
+  .tag-gray { background:#f5f5f8; color:#666; font-weight:500; }
+
+  /* 인풋 */
+  .form-input { width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid #e5e5ea; font-size:13px; outline:none; transition:border 0.15s; font-family:inherit; }
+  .form-input:focus { border-color:#ff4f6d; }
+  .form-textarea { resize:vertical; line-height:1.7; }
+  .input-group { margin-bottom:18px; }
+  .input-label { font-size:13px; font-weight:600; color:#333; display:block; margin-bottom:6px; }
+
+  /* 완료 */
+  .done-section { padding:56px 32px; text-align:center; }
+  .done-emoji { font-size:52px; margin-bottom:16px; }
+  .done-title { font-size:18px; font-weight:700; color:#1a1a2e; margin-bottom:8px; }
+  .done-desc { font-size:13px; color:#888; line-height:1.7; margin-bottom:28px; }
+
+  /* 스텝 전환 */
+  .step { display:none; }
+  .step.active { display:block; }
+
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes popIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+</style>
+</head>
+<body>
+<div style="display:flex;">
+
+  <!-- ───── LNB ───── -->
+  <div class="lnb">
+    <div>
+      <div class="lnb-logo">
+        <div class="lnb-logo-icon">G</div>
+        <div>
+          <div class="lnb-logo-text">Grip</div>
+          <div class="lnb-logo-sub">STUDIO</div>
+        </div>
+      </div>
+      <div class="lnb-menu active"><span>📊</span> 대시보드</div>
+      <div class="lnb-menu"><span>📝</span> 스크립트</div>
+    </div>
+    <div class="lnb-bottom">
+      <button class="beta-btn" onclick="openPopup()">
+        <span class="beta-badge">BETA</span> 문의하기
+      </button>
+      <div class="lnb-user">
+        <div class="lnb-user-avatar">👤</div>
+        <div>
+          <div class="lnb-user-name">셀러님</div>
+          <div class="lnb-user-role">Seller</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── 메인 ───── -->
+  <div class="main">
+    <div class="main-header">
+      <div class="main-header-title">🔴 라이브 대시보드 <span class="main-header-time">00:20:02</span></div>
+      <div class="main-header-stats">
+        <div class="main-header-stat">실시간 접속 2명</div>
+        <div class="main-header-stat">주문 금액 200원</div>
+        <div class="main-header-stat">장바구니 19개</div>
+      </div>
+    </div>
+    <div class="main-grid">
+      <div class="main-card">
+        <div class="video-placeholder"></div>
+        <div class="skeleton" style="height:10px;width:50%;margin-bottom:8px"></div>
+        <div class="skeleton-light" style="height:10px;width:80%"></div>
+      </div>
+      <div class="main-card">
+        <div class="main-card-title">스토어</div>
+        <div class="product-row"><div class="product-thumb"></div><div style="flex:1"><div class="skeleton" style="height:8px;width:60%;margin-bottom:6px"></div><div class="skeleton-light" style="height:8px;width:30%"></div></div></div>
+        <div class="product-row"><div class="product-thumb"></div><div style="flex:1"><div class="skeleton" style="height:8px;width:50%;margin-bottom:6px"></div><div class="skeleton-light" style="height:8px;width:40%"></div></div></div>
+        <div class="product-row"><div class="product-thumb"></div><div style="flex:1"><div class="skeleton" style="height:8px;width:70%;margin-bottom:6px"></div><div class="skeleton-light" style="height:8px;width:25%"></div></div></div>
+      </div>
+      <div class="main-card">
+        <div class="main-card-title">채팅</div>
+        <div class="chat-line" style="width:55%"></div>
+        <div class="chat-line" style="width:70%"></div>
+        <div class="chat-line" style="width:45%"></div>
+        <div class="chat-line" style="width:80%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ───── 딤드 + 팝업 ───── -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closePopup()">
+  <div class="popup">
+
+    <!-- 헤더 -->
+    <div class="popup-header">
+      <div class="popup-header-top">
+        <div class="popup-header-left">
+          <div class="popup-logo">G</div>
+          <div class="popup-title">그립 스튜디오 사용 관련 문의하기</div>
+        </div>
+        <button class="popup-close" onclick="closePopup()">✕</button>
+      </div>
+      <p class="popup-desc">그립 스튜디오를 사용해보시고 불편하신 점이나 개선되었으면 하는 점을 알려주세요!</p>
+      <button class="info-toggle" onclick="toggleInfo()">
+        <span class="info-arrow" id="infoArrow">▶</span> 그립 스튜디오란?
+      </button>
+      <div class="info-box" id="infoBox">
+        <strong>라이브 대시보드</strong>는 방송 송출자(셀러) 기준으로, 모바일 및 OBS 등으로 방송을 송출하실 때 보다 넓은 화면에서 더 빠르고 쉽게 방송을 제어하기 위한 도구입니다.<br><br>
+        매니저가 함께 사용한다면, 기존 대비 더 빠르게 상품을 판매할 수 있습니다.<br><br>
+        <span class="info-coming">Coming Soon</span> — 방송 전 준비 도구, 방송 후 데이터 대시보드 등 다양한 기능을 준비하고 있습니다.
+      </div>
+    </div>
+
+    <!-- Step 1: 유형 + 영역 -->
+    <div class="form-section step active" id="step1">
+      <div class="form-label">어떤 유형의 문제인가요? <span class="form-label-required">(필수)</span></div>
+      <div class="cat-grid" id="catGrid"></div>
+
+      <div class="form-label">어디에서 발생한 문제인가요? <span class="form-label-optional">(선택)</span></div>
+      <div class="area-chips" id="areaChips"></div>
+
+      <button class="btn-primary" id="btnNext" disabled onclick="goStep(2)">다음 →</button>
+    </div>
+
+    <!-- Step 2: 상세 입력 -->
+    <div class="form-section step" id="step2">
+      <button class="btn-back" onclick="goStep(1)">← 이전으로</button>
+      <div style="display:flex;gap:8px;margin-bottom:20px" id="selectedTags"></div>
+
+      <div class="input-group">
+        <label class="input-label">제목</label>
+        <input class="form-input" id="inputTitle" placeholder="문의 내용을 한 줄로 요약해주세요" oninput="checkSubmit()">
+      </div>
+      <div class="input-group">
+        <label class="input-label">상세 내용</label>
+        <textarea class="form-input form-textarea" id="inputBody" rows="5" placeholder="예시)&#10;- 어떤 상황에서 문제가 발생했나요?&#10;- 어떤 기능이 있었으면 좋겠나요?&#10;- 기존에 기대했던 동작은 무엇인가요?" oninput="checkSubmit()"></textarea>
+      </div>
+      <div class="input-group">
+        <label class="input-label">이메일 <span class="form-label-optional">(선택 — 답변이 필요하신 경우)</span></label>
+        <input class="form-input" id="inputEmail" placeholder="example@email.com">
+      </div>
+      <button class="btn-primary" id="btnSubmit" disabled onclick="goStep(3)">문의 보내기</button>
+    </div>
+
+    <!-- Step 3: 완료 -->
+    <div class="step" id="step3">
+      <div class="done-section">
+        <div class="done-emoji">🙏</div>
+        <div class="done-title">소중한 의견 감사합니다!</div>
+        <div class="done-desc" id="doneDesc">전달해주신 내용을 검토하여 서비스 개선에 반영하겠습니다.</div>
+        <button class="btn-close-final" onclick="closePopup()">닫기</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── 데이터 ──
+  const categories = [
+    { id:'bug', label:'오류/버그', emoji:'🐛', desc:'기능이 동작하지 않아요' },
+    { id:'ux', label:'사용성 개선', emoji:'🎨', desc:'사용하기 불편해요' },
+    { id:'feature', label:'기능 제안', emoji:'💡', desc:'이런 기능이 있으면 좋겠어요' },
+    { id:'other', label:'기타 의견', emoji:'💬', desc:'그 외 의견이 있어요' },
+  ];
+  const areas = [
+    '스토어-상품관리','한정판매-상품관리','채팅 관련',
+    '게임 기능 (경매/추첨 등)','실시간 판매 성과','스크립트','기타'
+  ];
+
+  // ── 상태 ──
+  let selectedCat = null;
+  let selectedArea = null;
+
+  // ── 초기 렌더 ──
+  function renderCategories() {
+    const grid = document.getElementById('catGrid');
+    grid.innerHTML = categories.map(c => `
+      <button class="cat-btn" data-id="${c.id}" onclick="selectCat('${c.id}')">
+        <div class="cat-emoji">${c.emoji}</div>
+        <div class="cat-label">${c.label}</div>
+        <div class="cat-desc">${c.desc}</div>
+      </button>
+    `).join('');
+  }
+
+  function renderAreas() {
+    const chips = document.getElementById('areaChips');
+    chips.innerHTML = areas.map(a => `
+      <button class="area-chip" onclick="selectArea(this,'${a}')">${a}</button>
+    `).join('');
+  }
+
+  renderCategories();
+  renderAreas();
+
+  // ── 선택 로직 ──
+  function selectCat(id) {
+    selectedCat = id;
+    document.querySelectorAll('.cat-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.id === id);
+    });
+    document.getElementById('btnNext').disabled = false;
+  }
+
+  function selectArea(el, name) {
+    if (selectedArea === name) {
+      selectedArea = null;
+      el.classList.remove('selected');
+    } else {
+      selectedArea = name;
+      document.querySelectorAll('.area-chip').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+  }
+
+  // ── 스텝 전환 ──
+  function goStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+
+    if (n === 2) {
+      const cat = categories.find(c => c.id === selectedCat);
+      let html = `<span class="tag tag-primary">${cat.emoji} ${cat.label}</span>`;
+      if (selectedArea) html += `<span class="tag tag-gray">${selectedArea}</span>`;
+      document.getElementById('selectedTags').innerHTML = html;
+    }
+    if (n === 3) {
+      const email = document.getElementById('inputEmail').value.trim();
+      const desc = document.getElementById('doneDesc');
+      desc.innerHTML = '전달해주신 내용을 검토하여 서비스 개선에 반영하겠습니다.'
+        + (email ? '<br>입력하신 이메일로 답변 드릴게요.' : '');
+
+      /* ── 여기에 실제 API 호출 추가 ──
+      fetch('/api/v1/studio/beta-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: selectedCat,
+          area: selectedArea,
+          title: document.getElementById('inputTitle').value.trim(),
+          body: document.getElementById('inputBody').value.trim(),
+          email: email || null,
+        })
+      });
+      */
+    }
+  }
+
+  function checkSubmit() {
+    const t = document.getElementById('inputTitle').value.trim();
+    const b = document.getElementById('inputBody').value.trim();
+    document.getElementById('btnSubmit').disabled = !(t && b);
+  }
+
+  // ── 팝업 열기/닫기 ──
+  function openPopup() {
+    selectedCat = null;
+    selectedArea = null;
+    document.getElementById('inputTitle') && (document.getElementById('inputTitle').value = '');
+    document.getElementById('inputBody') && (document.getElementById('inputBody').value = '');
+    document.getElementById('inputEmail') && (document.getElementById('inputEmail').value = '');
+    document.getElementById('btnNext').disabled = true;
+    renderCategories();
+    renderAreas();
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step1').classList.add('active');
+    document.getElementById('infoBox').classList.remove('open');
+    document.getElementById('infoArrow').classList.remove('open');
+    document.getElementById('overlay').classList.add('active');
+  }
+
+  function closePopup() {
+    document.getElementById('overlay').classList.remove('active');
+  }
+
+  function toggleInfo() {
+    document.getElementById('infoBox').classList.toggle('open');
+    document.getElementById('infoArrow').classList.toggle('open');
+  }
+</script>
+</body>
+</html>
